@@ -23,7 +23,6 @@ def get_feed(url):
 def process_text(text):
     text = text.lower()
     text = re.sub(r'[.,"\'-?:!;’‘]', '', text)
-    #text = text.replace(''', '')
     text = remove_stopwords(text)
     text = " ".join([word.lemmatize() for word in TextBlob(text).words])
     return text
@@ -53,7 +52,8 @@ def store_in_db(record):
     sql = "INSERT IGNORE INTO articles (link, category, title, published, authors, first_image, images, summary, search_text) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
     values = (record['link'], record['category'], record['title'], record['published'], record['authors'], record['first_image'], record['images'], record['summary'], record['search_text'])
     cursor.execute(sql, values)
-    print(str(cursor.rowcount))
+    if cursor.rowcount == 1:
+        print(record['title'])
     db.commit()
 
 
@@ -88,11 +88,67 @@ def process(articles):
         store_in_db(record)
 
 
+def get_dezeen_images(url):
+    response = requests.get(url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    article = soup.find('article')
+    images = article.findAll('figure')
+    img = []
+    for image in images:
+        try:
+            img.append(str(image['data-lightboximage']))
+        except:
+            pass
+
+    image_url = img[0]
+    image_urls = img[1:]
+
+    return image_url, image_urls
+
+
+def get_dezeen():
+
+    url = "https://www.dezeen.com/architecture/"
+    response = requests.get(url)
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+    soup = soup.find("ul", {"class": "main-story-list"})
+    articles = soup.findAll('article')
+
+    for article in articles:
+        link = article.find('a', href=True)['href']
+        title = article.find('h3').text
+        summary = article.find('p').text.replace(". More", ".")
+        published = article.find('time')['datetime']
+        published = datetime.strptime(published, "%Y-%m-%d %H:%M").strftime("%Y-%m-%d %H:%M:%S")
+
+        first_image, images = get_dezeen_images(link)
+        images = ";".join(images)
+
+        text = title + " " + summary
+        text = process_text(text)
+        record = {
+            'link': link,
+            'category': 'architecture',
+            'title': title,
+            'published': published,
+            'authors': article.find('footer').find('a').text,
+            'first_image': first_image,
+            'images': images,
+            'summary': summary,
+            'search_text': text
+        }
+        store_in_db(record)
+        #print(record)
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     load_dotenv()
-    #db_user = os.environ.get('secretUser')
-    #db_pw = os.environ.get('secretKey')
+
+    # designboom
     url = 'https://www.designboom.com/feed/'
     feed = get_feed(url)
     process(feed.entries)
+
+    # dezeen (architecture)
+    get_dezeen()
