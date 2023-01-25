@@ -34,6 +34,9 @@ def get_images(url):
     root = html.fromstring(response.content)
     image_url = root.xpath("//img/@src")[0]
     image_urls = root.xpath("//div[@class='page-content']//img/@data-src")
+    if not str(image_url).startswith('https'):
+        image_url = image_urls[0]
+        image_urls = image_urls[1:]
     return image_url, image_urls
 
 
@@ -46,16 +49,18 @@ def store_in_db(record):
     )
 
     cursor = db.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS articles (link VARCHAR(255) PRIMARY KEY, title VARCHAR(1024), published TIMESTAMP, authors VARCHAR(1024), first_image VARCHAR(1024), images VARCHAR(65535), summary VARCHAR(1024), search_text VARCHAR(2048))")
-    sql = "INSERT IGNORE INTO articles (link, title, published, authors, first_image, images, summary, search_text) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
-    values = (record['link'], record['title'], record['published'], record['authors'], record['first_image'], record['images'], record['summary'], record['search_text'])
+    cursor.execute("CREATE TABLE IF NOT EXISTS articles (link VARCHAR(255) PRIMARY KEY, category VARCHAR(255), title VARCHAR(1024), published TIMESTAMP, authors VARCHAR(1024), first_image VARCHAR(1024), images VARCHAR(65535), summary VARCHAR(1024), search_text VARCHAR(2048))")
+    sql = "INSERT IGNORE INTO articles (link, category, title, published, authors, first_image, images, summary, search_text) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    values = (record['link'], record['category'], record['title'], record['published'], record['authors'], record['first_image'], record['images'], record['summary'], record['search_text'])
     cursor.execute(sql, values)
+    print(str(cursor.rowcount))
     db.commit()
 
 
 def process(articles):
     for article in articles:
         link = article['link']
+        category = link.split('/')[3]
         title = article['title']
         published = article['published']
         published = datetime.strptime(published, "%a, %d %b %Y %H:%M:%S %z").strftime("%Y-%m-%d %H:%M:%S")
@@ -66,11 +71,12 @@ def process(articles):
         summary = article.summary.replace('<img src="https://www.designboom.com/feed/" /><br />', '')
         summary = summary.replace('<img src="" /><br />', '')
         soup = BeautifulSoup(summary, 'html.parser')
-        text = soup.p.get_text()
-        text = title + " " + text
+        summary = soup.p.get_text()
+        text = title + " " + summary
         text = process_text(text)
         record = {
             'link': link,
+            'category': category,
             'title': title,
             'published': published,
             'authors': authors,

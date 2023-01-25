@@ -1,6 +1,7 @@
 import streamlit as st
 import mysql.connector
 import pandas as pd
+from bs4 import BeautifulSoup
 
 
 @st.experimental_memo(ttl=3600)
@@ -26,6 +27,9 @@ if __name__ == "__main__":
     data = data.sort_values(by=['published'], ascending=False)
     data.reset_index(inplace=True, drop=True)
 
+    st.write(data)
+
+
     for ind, article in data.iterrows():
         url = article.link
         title = article.title
@@ -41,7 +45,8 @@ if __name__ == "__main__":
             st.write(str(published) + "  /  " + authors)
             summary = article.summary
             st.markdown(summary, unsafe_allow_html=True)
-            if st.button('Load images', key="btn"+str(ind)):
+            #if st.button('Load images', key="btn"+str(ind)):
+            with st.expander('More images', expanded=False):
                 for img in images:
                     st.image(img)
 
@@ -52,6 +57,7 @@ if __name__ == "__main__":
                                 </a>''',
                         unsafe_allow_html=True
                         )
+
         st.write('---')
 
 
