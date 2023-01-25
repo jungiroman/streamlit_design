@@ -1,0 +1,12 @@
+python-dotenv
+feedparser
+lxml
+requests
+pandas
+bs4
+textblob
+nltk
+gensim
+mysql.connector
+datetime
+streamlit
