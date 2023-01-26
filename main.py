@@ -100,15 +100,16 @@ def get_dezeen_images(url):
         except:
             pass
 
-    image_url = img[0]
-    image_urls = img[1:]
+    if img:
+        image_url = img[0]
+        image_urls = img[1:]
 
-    return image_url, image_urls
+        return image_url, image_urls
+    else:
+        return None, None
 
 
-def get_dezeen():
-
-    url = "https://www.dezeen.com/architecture/"
+def get_dezeen(url, category):
     response = requests.get(url)
 
     soup = BeautifulSoup(response.content, 'html.parser')
@@ -123,23 +124,23 @@ def get_dezeen():
         published = datetime.strptime(published, "%Y-%m-%d %H:%M").strftime("%Y-%m-%d %H:%M:%S")
 
         first_image, images = get_dezeen_images(link)
-        images = ";".join(images)
+        if first_image and images:
+            images = ";".join(images)
 
-        text = title + " " + summary
-        text = process_text(text)
-        record = {
-            'link': link,
-            'category': 'architecture',
-            'title': title,
-            'published': published,
-            'authors': article.find('footer').find('a').text,
-            'first_image': first_image,
-            'images': images,
-            'summary': summary,
-            'search_text': text
-        }
-        store_in_db(record)
-        #print(record)
+            text = title + " " + summary
+            text = process_text(text)
+            record = {
+                'link': link,
+                'category': category,
+                'title': title,
+                'published': published,
+                'authors': article.find('footer').find('a').text,
+                'first_image': first_image,
+                'images': images,
+                'summary': summary,
+                'search_text': text
+            }
+            store_in_db(record)
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -151,4 +152,14 @@ if __name__ == '__main__':
     process(feed.entries)
 
     # dezeen (architecture)
-    get_dezeen()
+    url = "https://www.dezeen.com/architecture/"
+    get_dezeen(url, 'architecture')
+
+    url = "https://www.dezeen.com/interiors/"
+    get_dezeen(url, 'interiors')
+
+    url = "https://www.dezeen.com/design/"
+    get_dezeen(url, 'design')
+
+    url = "https://www.dezeen.com/lookbooks/"
+    get_dezeen(url, 'interiors')

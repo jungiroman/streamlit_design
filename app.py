@@ -76,6 +76,8 @@ if __name__ == "__main__":
             query = "SELECT * FROM articles" + clause + " ORDER BY published DESC LIMIT "+str(start)+",10"
 
             st.write(query)
+        if st.button("Clear cache"):
+            st.experimental_memo.clear()
 
     data = pd.DataFrame(read_from_db(query))
 
