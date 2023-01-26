@@ -101,9 +101,7 @@ if __name__ == "__main__":
                 st.write(str(published) + "  /  " + authors)
                 summary = article.summary
                 st.markdown(summary, unsafe_allow_html=True)
-                with st.expander('More images', expanded=False):
-                    for img in images:
-                        st.image(img)
+
 
             with col2:
                 st.markdown(f'''
@@ -112,6 +110,9 @@ if __name__ == "__main__":
                                     </a>''',
                             unsafe_allow_html=True
                             )
+                with st.expander('More images', expanded=False):
+                    for img in images:
+                        st.image(img)
 
             st.write('---')
 
