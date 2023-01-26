@@ -2,14 +2,8 @@ import streamlit as st
 import mysql.connector
 import pandas as pd
 from textblob import TextBlob
-import nltk
 from gensim.parsing.preprocessing import remove_stopwords
 import re
-import feedparser
-from lxml import html
-import requests
-from bs4 import BeautifulSoup
-from datetime import datetime
 
 
 @st.experimental_memo(ttl=3600)
@@ -29,21 +23,8 @@ def process_text(text):
     return text
 
 
-
-
-    #image_urls
-def process_text(text):
-    text = text.lower()
-    text = re.sub(r'[.,"\'-?:!;’‘]', '', text)
-    text = remove_stopwords(text)
-    text = " ".join([word.lemmatize() for word in TextBlob(text).words])
-    return text
-
-
-
-
 if __name__ == "__main__":
-    st.set_page_config(page_title="design feed", page_icon=":newspaper:", layout="wide")
+    st.set_page_config(page_title="design feed", page_icon=":classical_building:", layout="wide")
     st.title('design feed')
     if 'page' not in st.session_state:
         st.session_state['page'] = 0
@@ -102,7 +83,6 @@ if __name__ == "__main__":
                 summary = article.summary
                 st.markdown(summary, unsafe_allow_html=True)
 
-
             with col2:
                 st.markdown(f'''
                                     <a href="{url}">
@@ -128,7 +108,7 @@ if __name__ == "__main__":
         if col2.button('Previous page'):
             st.session_state['page'] = st.session_state['page'] - 1
             st.experimental_rerun()
-    col3.write("Page: " + str(st.session_state['page']))
+    col3.write("Page: " + str(st.session_state['page'] + 1))
 
     if not data.empty:
         if col4.button('Next page'):
