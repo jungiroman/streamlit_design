@@ -24,7 +24,7 @@ def process_text(text):
 
 
 if __name__ == "__main__":
-    st.set_page_config(page_title="design feed", page_icon=":classical_building:", layout="wide")
+    st.set_page_config(page_title="design feed", page_icon="classical_building", layout="wide")
     st.title('design feed')
     if 'page' not in st.session_state:
         st.session_state['page'] = 0
