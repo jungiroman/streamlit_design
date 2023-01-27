@@ -4,6 +4,8 @@ import pandas as pd
 from textblob import TextBlob
 from gensim.parsing.preprocessing import remove_stopwords
 import re
+import nltk
+nltk.download('wordnet')
 
 
 @st.experimental_memo(ttl=3600)

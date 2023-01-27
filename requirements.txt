@@ -10,3 +10,4 @@ gensim
 mysql.connector
 datetime
 streamlit
+wordcloud
