@@ -23,6 +23,6 @@ if __name__ == "__main__":
                           collocations=False, stopwords=STOPWORDS)
 
     wordcloud_image = wordcloud.generate(text).to_image()
-    #st.image(wordcloud_image)
+    st.image(wordcloud_image)
     st.write(wordcloud.process_text(text))
     st.write(text)
