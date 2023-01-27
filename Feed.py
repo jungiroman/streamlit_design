@@ -35,21 +35,42 @@ def hide_header():
 if __name__ == "__main__":
     st.set_page_config(page_title="design feed", page_icon=":random:", layout="wide")
     hide_header()
+    reload_data = False
     st.title('design feed')
     if 'page' not in st.session_state:
         st.session_state['page'] = 0
+        st.session_state['step_size'] = 0
+        st.session_state['step_size_ind'] = 0
+        st.session_state['clause'] = ""
+
+    st.write()
 
     start = st.session_state['page'] * 10
     categories = list(x[0] for x in read_from_db("SELECT DISTINCT category FROM articles"))
 
-    query = "SELECT * FROM articles ORDER BY published DESC LIMIT "+str(start)+",10"
+
     with st.sidebar:
+
+        options = [10, 25, 50]
+        st.session_state.step_size = st.radio('Number of articles',
+                                              options,
+                                              index=st.session_state.step_size_ind)
+
+        current_index = options.index(st.session_state.step_size)
+        if current_index != st.session_state.step_size_ind:
+            del st.session_state['data']
+            st.session_state.step_size_ind = current_index
+
+        limit = str(start) + "," + str(st.session_state.step_size)
+        #query = "SELECT * FROM articles ORDER BY published DESC LIMIT " + limit
+
         with st.form('filter'):
             selected_categories = st.multiselect('Categories', categories)
             text_search = st.text_input('Search term')
             set_filter = st.form_submit_button('Filter')
 
         if set_filter:
+            del st.session_state['data']
             where_clause = []
             if selected_categories:
                 s_cat = "('" + "', '".join(selected_categories) + "')"
@@ -60,17 +81,23 @@ if __name__ == "__main__":
                 where_clause.append("search_text LIKE '%" + term + "%'")
 
             if where_clause:
-                clause = " WHERE " + " AND ".join(where_clause)
+                st.session_state.clause = " WHERE " + " AND ".join(where_clause)
             else:
-                clause = ""
+                st.session_state.clause = ""
 
-            query = "SELECT * FROM articles" + clause + " ORDER BY published DESC LIMIT "+str(start)+",10"
+        clause = st.session_state.clause
+        query = "SELECT * FROM articles" + clause + " ORDER BY published DESC LIMIT " + limit
 
-            st.write(query)
+        st.write(query)
         if st.button("Clear cache"):
+            del st.session_state['data']
             st.experimental_memo.clear()
 
-    data = pd.DataFrame(read_from_db(query))
+    if 'data' not in st.session_state:
+        with st.spinner('Load data'):
+            st.session_state['data'] = pd.DataFrame(read_from_db(query))
+
+    data = st.session_state['data']
 
     if not data.empty:
         column_query = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'articles' AND TABLE_SCHEMA = '" + \
@@ -113,14 +140,18 @@ if __name__ == "__main__":
     if st.session_state['page'] > 0:
         if col1.button('First page'):
             st.session_state['page'] = 0
-            st.experimental_rerun()
+            reload_data = True
     if st.session_state['page'] > 1:
         if col2.button('Previous page'):
             st.session_state['page'] = st.session_state['page'] - 1
-            st.experimental_rerun()
+            reload_data = True
     col3.write("Page: " + str(st.session_state['page'] + 1))
 
     if not data.empty:
         if col4.button('Next page'):
             st.session_state['page'] = st.session_state['page'] + 1
-            st.experimental_rerun()
+            reload_data = True
+
+    if reload_data:
+        del st.session_state['data']
+        st.experimental_rerun()
