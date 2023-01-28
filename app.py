@@ -26,11 +26,7 @@ def process_text(text):
 
 
 def hide_header():
-    hide_decoration_bar_style = '''
-                <style>
-                    header {visibility: hidden;}
-                </style>
-            '''
+    hide_decoration_bar_style = '<style>header {visibility: hidden;}</style>'
     st.markdown(hide_decoration_bar_style, unsafe_allow_html=True)
 
 
@@ -41,15 +37,16 @@ if __name__ == "__main__":
     st.title('design feed')
     if 'page' not in st.session_state:
         st.session_state['page'] = 0
-        st.session_state['step_size'] = 0
+        st.session_state['step_size'] = 10
         st.session_state['step_size_ind'] = 0
         st.session_state['clause'] = ""
 
-    st.write()
+    def del_data():
+        if 'data' in st.session_state:
+            del st.session_state['data']
 
-    start = st.session_state['page'] * 10
+
     categories = list(x[0] for x in read_from_db("SELECT DISTINCT category FROM articles"))
-
 
     with st.sidebar:
 
@@ -63,8 +60,8 @@ if __name__ == "__main__":
             del st.session_state['data']
             st.session_state.step_size_ind = current_index
 
+        start = st.session_state['page'] * st.session_state.step_size
         limit = str(start) + "," + str(st.session_state.step_size)
-        #query = "SELECT * FROM articles ORDER BY published DESC LIMIT " + limit
 
         with st.form('filter'):
             selected_categories = st.multiselect('Categories', categories)
@@ -72,7 +69,7 @@ if __name__ == "__main__":
             set_filter = st.form_submit_button('Filter')
 
         if set_filter:
-            del st.session_state['data']
+            del_data()
             where_clause = []
             if selected_categories:
                 s_cat = "('" + "', '".join(selected_categories) + "')"
@@ -92,7 +89,7 @@ if __name__ == "__main__":
 
         st.write(query)
         if st.button("Clear cache"):
-            del st.session_state['data']
+            del_data()
             st.experimental_memo.clear()
 
     if 'data' not in st.session_state:
@@ -155,5 +152,5 @@ if __name__ == "__main__":
             reload_data = True
 
     if reload_data:
-        del st.session_state['data']
+        del_data()
         st.experimental_rerun()
