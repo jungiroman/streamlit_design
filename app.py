@@ -6,6 +6,7 @@ from gensim.parsing.preprocessing import remove_stopwords
 import re
 import nltk
 nltk.download('wordnet')
+nltk.download('punkt')
 
 
 @st.experimental_memo(ttl=3600)
