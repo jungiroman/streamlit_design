@@ -11,3 +11,4 @@ mysql.connector
 datetime
 streamlit
 wordcloud
+plotly

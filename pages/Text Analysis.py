@@ -1,3 +1,4 @@
+import pandas as pd
 import streamlit as st
 from textblob import TextBlob
 from wordcloud import WordCloud, STOPWORDS
@@ -8,6 +9,7 @@ from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 from gensim.corpora import Dictionary
 from gensim.models import LdaModel
+import plotly.express as px
 nltk.download('averaged_perceptron_tagger')
 nltk.download('maxent_ne_chunker')
 nltk.download('words')
@@ -23,10 +25,16 @@ def analyze_sentiment(titles, summaries, search_texts):
     st.write('### Sentiment analysis')
 
     def _analyze_sentiment(texts):
+        sentiments = pd.DataFrame(columns=['polarity', 'subjectivity'])
         for text in texts:
             sentiment = TextBlob(text).sentiment
-            st.write(text + " / Polarity: " + str(sentiment.polarity) + " / Subjectivity: " + str(
-                sentiment.subjectivity))
+            sentiments.loc[text] = [sentiment.polarity, sentiment.subjectivity]
+        st.write(sentiments)
+
+        fig = px.scatter(sentiments, x='polarity', y='subjectivity')
+        fig.update_layout(yaxis_range=[0, 1], xaxis_range=[-1, 1])
+        st.plotly_chart(fig, use_container_width=True)
+
         st.write('---')
 
     with st.expander('show'):
@@ -81,7 +89,7 @@ def model_topic(titles, summaries, search_texts):
         texts = [headline.split() for headline in texts]
         dictionary = Dictionary(texts)
         corpus = [dictionary.doc2bow(text) for text in texts]
-        lda = LdaModel(corpus, num_topics=5)
+        lda = LdaModel(corpus, num_topics=2)
         for topic in lda.print_topics():
             st.write(topic)
 
