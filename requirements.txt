@@ -12,3 +12,4 @@ datetime
 streamlit
 wordcloud
 plotly
+scikit-learn
